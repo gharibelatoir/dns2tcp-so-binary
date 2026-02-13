@@ -1,12 +1,7 @@
 LOCAL_PATH := $(call my-dir)
 
-# --- بناء المكتبة المشتركة .so ---
-include $(CLEAR_VARS)
-LOCAL_MODULE    := dns2tcpc
-LOCAL_CFLAGS    := -fcommon -Dfull_android
-LOCAL_C_INCLUDES := $(LOCAL_PATH)
-
-LOCAL_SRC_FILES := \
+# تعريف قائمة الملفات المشتركة لكي لا نخطئ
+DNS2TCP_SRC := \
     ../client/options.c \
     ../client/socket.c \
     ../client/auth.c \
@@ -28,15 +23,21 @@ LOCAL_SRC_FILES := \
     ../common/memdump.c \
     ../common/crc16.c
 
-LOCAL_LDLIBS := -llog
+# 1. بناء المكتبة المشتركة (.so)
+include $(CLEAR_VARS)
+LOCAL_MODULE    := dns2tcpc
+LOCAL_CFLAGS    := -fcommon -Dfull_android
+LOCAL_C_INCLUDES := $(LOCAL_PATH)
+LOCAL_SRC_FILES := $(DNS2TCP_SRC)
+LOCAL_LDLIBS    := -llog
 include $(BUILD_SHARED_LIBRARY)
 
-# --- بناء الملف التنفيذي Binary ---
+# 2. بناء الملف التنفيذي (Binary)
 include $(CLEAR_VARS)
 LOCAL_MODULE    := dns2tcpc_bin
 LOCAL_CFLAGS    := -fcommon -Dfull_android
 LOCAL_C_INCLUDES := $(LOCAL_PATH)
-# أضفنا main.c هنا لكي يجد المترجم دالة (main) المطلوبة للـ Executable
-LOCAL_SRC_FILES := ../client/main.c $(LOCAL_SRC_FILES)
-LOCAL_LDLIBS := -llog
+# هنا ندمج ملف main.c مع بقية الملفات لكي يجد البرنامج كل الوظائف
+LOCAL_SRC_FILES := ../client/main.c $(DNS2TCP_SRC)
+LOCAL_LDLIBS    := -llog
 include $(BUILD_EXECUTABLE)

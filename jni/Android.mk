@@ -5,7 +5,7 @@ LOCAL_MODULE    := dns2tcpc
 LOCAL_CFLAGS    := -fcommon -Dfull_android
 LOCAL_C_INCLUDES := $(LOCAL_PATH)
 
-# قائمة الملفات الموجودة فعلياً في مجلداتك
+# هذه هي القائمة الكاملة التي تحل كل أخطاء الـ undefined symbol التي ظهرت لك
 LOCAL_SRC_FILES := \
     ../client/main.c \
     ../client/options.c \
@@ -14,17 +14,21 @@ LOCAL_SRC_FILES := \
     ../client/requests.c \
     ../client/client.c \
     ../client/session.c \
+    ../client/rr.c \
+    ../client/queue.c \
+    ../client/select.c \
     ../common/base64.c \
     ../common/dns.c \
     ../common/list.c \
     ../common/mycrypto.c \
     ../common/hmac_sha1.c \
-    ../common/myrand.c
+    ../common/myrand.c \
+    ../common/mystrnlen.c \
+    ../common/config.c
 
 LOCAL_LDLIBS := -llog
 include $(BUILD_SHARED_LIBRARY)
 
-# بناء الملف التنفيذي
 include $(CLEAR_VARS)
 LOCAL_MODULE    := dns2tcpc_bin
 LOCAL_C_INCLUDES := $(LOCAL_C_INCLUDES)

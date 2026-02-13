@@ -4,14 +4,9 @@ include $(CLEAR_VARS)
 LOCAL_MODULE    := dns2tcpc
 LOCAL_CFLAGS    := -fcommon -Dfull_android
 
-# أخبر المترجم أين يجد ملفات الـ .h (خارج مجلد jni)
-LOCAL_C_INCLUDES := \
-    $(LOCAL_PATH)/../client \
-    $(LOCAL_PATH)/../common \
-    $(LOCAL_PATH)/../includes \
-    $(LOCAL_PATH)/..
+# المترجم سيبحث في المجلد الحالي (jni) حيث توجد كل ملفات .h الآن
+LOCAL_C_INCLUDES := $(LOCAL_PATH)
 
-# أخبر المترجم أين يجد ملفات الـ .c (خارج مجلد jni)
 LOCAL_SRC_FILES := \
     ../client/main.c \
     ../client/options.c \

@@ -1,6 +1,6 @@
 LOCAL_PATH := $(call my-dir)
 
-# تعريف قائمة الملفات المشتركة لكي لا نخطئ
+# تعريف قائمة الملفات المشتركة
 DNS2TCP_SRC := \
     ../client/options.c \
     ../client/socket.c \
@@ -23,13 +23,16 @@ DNS2TCP_SRC := \
     ../common/memdump.c \
     ../common/crc16.c
 
-# 1. بناء المكتبة المشتركة (.so)
+# 1. بناء المكتبة المشتركة (.so) - هنا أضفنا ملف main.c وأوامر التصدير
 include $(CLEAR_VARS)
 LOCAL_MODULE    := dns2tcpc
-LOCAL_CFLAGS    := -fcommon -Dfull_android
+LOCAL_CFLAGS    := -fcommon -Dfull_android -DJNI_BUILD
 LOCAL_C_INCLUDES := $(LOCAL_PATH)
-LOCAL_SRC_FILES := $(DNS2TCP_SRC)
+# أضفنا ../client/main.c هنا لكي تظهر دالة الـ JNI داخل الـ .so
+LOCAL_SRC_FILES := ../client/main.c $(DNS2TCP_SRC)
 LOCAL_LDLIBS    := -llog
+# هذا السطر يمنع المترجم من حذف أسماء الدوال الديناميكية
+LOCAL_LDFLAGS   := -Wl,--export-dynamic
 include $(BUILD_SHARED_LIBRARY)
 
 # 2. بناء الملف التنفيذي (Binary)
@@ -37,7 +40,6 @@ include $(CLEAR_VARS)
 LOCAL_MODULE    := dns2tcpc_bin
 LOCAL_CFLAGS    := -fcommon -Dfull_android
 LOCAL_C_INCLUDES := $(LOCAL_PATH)
-# هنا ندمج ملف main.c مع بقية الملفات لكي يجد البرنامج كل الوظائف
 LOCAL_SRC_FILES := ../client/main.c $(DNS2TCP_SRC)
 LOCAL_LDLIBS    := -llog
 include $(BUILD_EXECUTABLE)

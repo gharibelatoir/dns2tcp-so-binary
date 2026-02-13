@@ -1,27 +1,10 @@
-/*
-** Copyright (C) 2006 Olivier DEMBOUR
-** $Id: main.c,v 1.12.4.4 2009/12/28 15:11:15 dembour Exp $
-**
-** 
-** This program is free software; you can redistribute it and/or modify
-** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
-** (at your option) any later version.
-**
-** This program is distributed in the hope that it will be useful,
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-** GNU General Public License for more details.
-**
-** You should have received a copy of the GNU General Public License
-** along with This program; if not, write to the Free Software
-** Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <sys/types.h>
+#include <unistd.h>
+#include <jni.h>
+#include <string.h>
 
 #ifndef _WIN32
 #include <sys/time.h>
@@ -36,31 +19,60 @@
 #include "myerror.h"
 #include "dns.h"
 
-/**
- * @brief main part
- * @retval 0 on success
- * @retval -1 on error
- **/
+int debug = 0;
 
-int			main(int argc, char **argv)
+// تغيير اسم main الأصلية إلى dns_main
+int dns_main(int argc, char **argv)
 {
-  t_conf		conf;
+  t_conf conf;
   
   if ((get_option(argc, argv, &conf)) ||  
       ((conf.sd_udp = create_socket(&conf)) == -1))
     return (-1);
+
   srand(getpid() ^ (unsigned int) time(0));
-#ifdef _WIN32
-  if (!(conf.event_udp = WSACreateEvent()))
-    {
-      MYERROR("WSACreateEvent error\n");
-      return (-1);
-    }
-  WSAEventSelect(conf.sd_udp, conf.event_udp, FD_READ);
-#endif
+
   if (!conf.resource)
     return (list_resources(&conf));
+    
   if ((!conf.local_port) || (!bind_socket(&conf)))
     do_client(&conf);
+    
   return (0);
+}
+
+// دالة main الأصلية للـ Binary المستقل
+#ifndef JNI_BUILD
+int main(int argc, char **argv) {
+    return dns_main(argc, argv);
+}
+#endif
+
+// واجهة JNI لاستدعاء المكتبة من Android (AIDE)
+JNIEXPORT jint JNICALL
+Java_com_slowdns_testing_ui_activity_Dns2TcpController_runDns2Tcp(JNIEnv *env, jobject thiz, jobjectArray args) {
+    
+    int argc = (*env)->GetArrayLength(env, args);
+    char **argv = (char **)malloc(argc * sizeof(char *));
+    int i;
+
+    for (i = 0; i < argc; i++) {
+        jstring str = (jstring)(*env)->GetObjectArrayElement(env, args, i);
+        const char *nativeString = (*env)->GetStringUTFChars(env, str, 0);
+        if (nativeString) {
+            argv[i] = strdup(nativeString);
+            (*env)->ReleaseStringUTFChars(env, str, nativeString);
+        } else {
+            argv[i] = NULL;
+        }
+    }
+
+    int result = dns_main(argc, argv);
+
+    for (i = 0; i < argc; i++) {
+        if (argv[i]) free(argv[i]);
+    }
+    free(argv);
+
+    return (jint)result;
 }

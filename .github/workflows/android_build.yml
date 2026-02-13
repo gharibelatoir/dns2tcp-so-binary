@@ -1,0 +1,23 @@
+name: Android CI Build
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up NDK
+        uses: nndixon/ndk-build-action@v1
+        with:
+          ndk-version: r25c
+          
+      - name: Build for all ABIs
+        run: |
+          ndk-build -C . APP_ABI=all
+          
+      - name: Upload Binaries and Libraries
+        uses: actions/upload-artifact@v3
+        with:
+          name: dns2tcp-android-build
+          path: libs/

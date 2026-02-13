@@ -1,23 +1,33 @@
-name: Android CI Build
+name: Android CI Build 2026
 on: [push]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Set up NDK
-        uses: nndixon/ndk-build-action@v1
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
-          ndk-version: r25c
-          
-      - name: Build for all ABIs
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Install Android NDK
         run: |
-          ndk-build -C . APP_ABI=all
+          sudo ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --install "ndk;25.2.9519653"
+
+      - name: Build with ndk-build
+        run: |
+          # تحديد مسار الـ NDK الذي تم تثبيته
+          NDK_PATH=${ANDROID_SDK_ROOT}/ndk/25.2.9519653
+          $NDK_PATH/ndk-build -C . APP_ABI=all
           
-      - name: Upload Binaries and Libraries
-        uses: actions/upload-artifact@v3
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
         with:
-          name: dns2tcp-android-build
-          path: libs/
+          name: dns2tcp-universal-binaries
+          path: |
+            libs/
+            obj/local/
